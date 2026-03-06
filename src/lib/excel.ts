@@ -35,10 +35,15 @@ function dateStr(val: unknown): string {
   return str(val);
 }
 
-/** Normalize sheet name for matching (trim, collapse spaces). */
+/** Normalize sheet name for matching (trim, collapse spaces, lowercase for case-insensitive match). */
 function normalizeSheetName(name: string): string {
-  return name.trim().replace(/\s+/g, " ");
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
+
+/** Tab name aliases: "Emergency Medicine" tab is accepted as department "Emergency". */
+const SHEET_NAME_ALIASES: Record<string, string> = {
+  "emergency medicine": "Emergency",
+};
 
 export interface SheetSummary {
   sheetName: string;
@@ -55,63 +60,108 @@ export interface ParseResult {
   detectedDepartments: string[];
 }
 
+/** Get cell value for a column: match sheet headers to aliases, then read from row. */
+function getRowValue(row: Record<string, unknown>, aliases: string[], allKeys: string[]): unknown {
+  const normalizedToKey = new Map<string, string>();
+  allKeys.forEach((k) => normalizedToKey.set(k.trim().toLowerCase().replace(/\s+/g, " "), k));
+  for (const a of aliases) {
+    const key = normalizedToKey.get(a);
+    if (key !== undefined) {
+      const val = row[key];
+      if (val !== undefined && val !== "") return val;
+    }
+  }
+  return undefined;
+}
+
+/** Check if the first row looks like a title row (e.g. "ICU", "Family Medicine" in first cell only). */
+function isTitleRow(row: unknown[], departmentNames: string[]): boolean {
+  const firstCell = str(row?.[0]);
+  if (!firstCell) return false;
+  const n = firstCell.toLowerCase().replace(/\s+/g, " ");
+  const isDeptTitle = departmentNames.some((d) => d.toLowerCase().replace(/\s+/g, " ") === n) || n === "emergency medicine";
+  if (!isDeptTitle) return false;
+  const restOfRow = (row as unknown[]).slice(1).map((c) => String(c ?? "").toLowerCase());
+  const hasAssetHeader = restOfRow.some((c) => c.includes("asset id") || c.includes("asset name") || c === "asset id" || c === "asset name");
+  return !hasAssetHeader;
+}
+
+/** Build a row object from header strings and cell values (by index). */
+function rowFromArrays(headers: string[], values: unknown[]): Record<string, unknown> {
+  const obj: Record<string, unknown> = {};
+  headers.forEach((h, i) => {
+    if (h != null && String(h).trim()) obj[String(h).trim()] = values[i];
+  });
+  return obj;
+}
+
 /**
- * Parse a single sheet and assign department from the sheet name.
- * Ignores any "Department" column in the sheet; tab name is source of truth.
+ * Parse a single sheet. Supports two layouts:
+ * - Row 1 = headers, Row 2+ = data (or Row 1 first cell = title like "ICU", then B1:K1 = headers).
+ * - Row 1 = title only (e.g. "Family Medicine"), Row 2 = headers, Row 3+ = data.
+ * Department is set from the sheet/tab name.
  */
 function parseSheet(
   sheet: XLSX.WorkSheet,
   sheetName: string,
   department: string
 ): { assets: Asset[]; errors: ParseResult["errors"] } {
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-    defval: "",
-    raw: false,
-  });
   const errors: ParseResult["errors"] = [];
   const assets: Asset[] = [];
 
-  if (rows.length === 0) {
+  const rowsArray = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: false });
+  if (rowsArray.length === 0) {
     errors.push({ sheet: sheetName, message: `No data rows were found in the ${sheetName} tab.` });
     return { assets, errors };
   }
 
-  const headers = Object.keys(rows[0] ?? {}).map((h) => String(h).trim());
-  const hasAssetId = headers.some((h) => h === "Asset ID" || h === "assetId");
-  const hasAssetName = headers.some((h) => h === "Asset Name" || h === "assetName");
+  const departmentNames = ["icu", "family medicine", "emergency", "emergency medicine"];
+  const isTitle = rowsArray.length > 1 && isTitleRow(rowsArray[0], departmentNames);
+  const headerRowIndex = isTitle ? 1 : 0;
+  const dataStartIndex = isTitle ? 2 : 1;
+
+  const headerRow = rowsArray[headerRowIndex] ?? [];
+  const headers = (headerRow as unknown[]).map((c) => String(c ?? "").trim());
+  const allKeys = headers.filter(Boolean);
+  const normalizedKeys = allKeys.map((k) => k.toLowerCase().replace(/\s+/g, " "));
+
+  const hasAssetId = ["asset id", "assetid"].some((a) => normalizedKeys.some((n) => n === a || n.includes("asset id")));
+  const hasAssetName = ["asset name", "assetname"].some((a) => normalizedKeys.some((n) => n === a || n.includes("asset name")));
   if (!hasAssetId && !hasAssetName) {
     errors.push({
       sheet: sheetName,
-      message: `The ${sheetName} tab is missing required columns (e.g. Asset ID, Asset Name).`,
+      message: `The ${sheetName} tab is missing required columns (e.g. Asset ID, Asset Name). Headers found: ${allKeys.join(", ") || "(none)"}.`,
     });
     return { assets, errors };
   }
 
-  rows.forEach((row, index) => {
-    const rowNum = index + 2;
-    const assetId = str(row["Asset ID"] ?? row["assetId"]);
-    const assetName = str(row["Asset Name"] ?? row["assetName"]);
+  const dataRows = rowsArray.slice(dataStartIndex);
+  dataRows.forEach((values, index) => {
+    const row = rowFromArrays(headers, values as unknown[]);
+    const rowNum = dataStartIndex + index + 1;
+    const assetId = str(getRowValue(row, ["asset id", "assetid"], allKeys));
+    const assetName = str(getRowValue(row, ["asset name", "assetname"], allKeys));
     if (!assetId && !assetName) return;
 
-    const quantityAvailable = num(row["Quantity Available"] ?? row["quantityAvailable"]);
-    const minimumThreshold = num(row["Minimum Threshold"] ?? row["minimumThreshold"]);
+    const quantityAvailable = num(getRowValue(row, ["quantity available", "quantityavailable", "qty", "quantity"], allKeys));
+    const minimumThreshold = num(getRowValue(row, ["minimum threshold", "minimumthreshold", "threshold", "min threshold"], allKeys));
     const status: AssetStatus = getAssetStatus(quantityAvailable, minimumThreshold);
 
     assets.push({
       id: generateId(),
       assetId: assetId || `AST-${department.replace(/\s/g, "-")}-${rowNum}`,
       assetName: assetName || "Unnamed",
-      category: str(row["Category"] ?? row["category"]),
+      category: str(getRowValue(row, ["category"], allKeys)),
       department,
       quantityAvailable,
       minimumThreshold,
-      unitCost: num(row["Unit Cost"] ?? row["unitCost"]),
-      currentCondition: str(row["Current Condition"] ?? row["currentCondition"]),
-      fundingSource: str(row["Funding Source"] ?? row["fundingSource"]),
+      unitCost: num(getRowValue(row, ["unit cost", "unit cost ($)", "unitcost", "cost"], allKeys)),
+      currentCondition: str(getRowValue(row, ["current condition", "currentcondition", "condition"], allKeys)),
+      fundingSource: str(getRowValue(row, ["funding source", "fundingsource", "funding"], allKeys)),
       lastUpdated:
-        dateStr(row["Last Updated"] ?? row["lastUpdated"]) ||
+        dateStr(getRowValue(row, ["last updated", "lastupdated", "last update", "date"], allKeys)) ||
         new Date().toISOString().slice(0, 10),
-      notes: str(row["Notes"] ?? row["notes"]),
+      notes: str(getRowValue(row, ["notes"], allKeys)),
       status,
     });
   });
@@ -149,7 +199,11 @@ export function parseExcelFile(file: File): Promise<ParseResult> {
 
         for (const required of REQUIRED_SHEET_NAMES) {
           const normalizedRequired = normalizeSheetName(required);
-          const originalName = normalizedToOriginal.get(normalizedRequired);
+          let originalName = normalizedToOriginal.get(normalizedRequired);
+          if (!originalName) {
+            const aliasKey = Object.keys(SHEET_NAME_ALIASES).find((alias) => normalizedToOriginal.get(alias) && SHEET_NAME_ALIASES[alias] === required);
+            if (aliasKey) originalName = normalizedToOriginal.get(aliasKey);
+          }
           if (!originalName) {
             missingTabs.push(required);
             continue;
@@ -214,7 +268,7 @@ export function parseExcelFile(file: File): Promise<ParseResult> {
   });
 }
 
-/** Download a template workbook with 3 tabs: ICU, General Medicine, Emergency. */
+/** Download a template workbook with 3 tabs: ICU, Family Medicine, Emergency. */
 export function downloadTemplate() {
   const headers = [...EXCEL_COLUMNS];
   const today = new Date().toISOString().slice(0, 10);
@@ -224,19 +278,19 @@ export function downloadTemplate() {
   const icuRows = [
     ["AST-ICU-001", "Ventilators", "Life Support", 12, 10, 25000, "Good", "State Grant", today, "ICU equipment"],
   ];
-  const gmRows = [
-    ["AST-GM-001", "IV Pumps", "Medical Equipment", 8, 15, 1200, "Good", "Hospital Budget", today, ""],
+  const fmRows = [
+    ["AST-FM-001", "IV Pumps", "Medical Equipment", 8, 15, 1200, "Good", "Hospital Budget", today, ""],
   ];
   const emRows = [
     ["AST-EM-001", "PPE Kits", "PPE & Supplies", 0, 50, 25, "N/A", "Federal", today, "Urgent restock"],
   ];
 
   const wsIcu = XLSX.utils.aoa_to_sheet([headers, ...icuRows]);
-  const wsGm = XLSX.utils.aoa_to_sheet([headers, ...gmRows]);
+  const wsFm = XLSX.utils.aoa_to_sheet([headers, ...fmRows]);
   const wsEm = XLSX.utils.aoa_to_sheet([headers, ...emRows]);
 
   XLSX.utils.book_append_sheet(wb, wsIcu, "ICU");
-  XLSX.utils.book_append_sheet(wb, wsGm, "General Medicine");
+  XLSX.utils.book_append_sheet(wb, wsFm, "Family Medicine");
   XLSX.utils.book_append_sheet(wb, wsEm, "Emergency");
 
   XLSX.writeFile(wb, "hospital_assets_template.xlsx");

@@ -35,7 +35,7 @@ export default function InventoryPage() {
       <div>
         <h1 className="text-2xl font-bold text-hospital-navy">Asset Inventory</h1>
         <p className="text-slate-600">
-          All assets imported from Excel, organized by ICU, General Medicine, and Emergency
+          All assets imported from Excel, organized by ICU, Family Medicine, and Emergency
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export default function InventoryPage() {
           </div>
           <h2 className="mb-2 text-lg font-semibold text-slate-800">No inventory records available yet</h2>
           <p className="mx-auto max-w-md text-slate-600">
-            Upload your Excel workbook with ICU, General Medicine, and Emergency tabs to see your asset records here.
+            Upload your Excel workbook with ICU, Family Medicine, and Emergency tabs to see your asset records here.
           </p>
           <Link
             href="/upload"

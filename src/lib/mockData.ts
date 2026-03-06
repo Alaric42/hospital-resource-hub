@@ -1,11 +1,11 @@
 /**
  * Department names are determined by the Excel workbook tabs:
- * ICU, General Medicine, Emergency.
+ * ICU, Family Medicine, Emergency.
  * No mock hospital data — app starts empty until Excel is uploaded.
  */
 export const EXPECTED_DEPARTMENTS = [
   "ICU",
-  "General Medicine",
+  "Family Medicine",
   "Emergency",
 ] as const;
 

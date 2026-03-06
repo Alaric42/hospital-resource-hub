@@ -35,7 +35,7 @@ export default function RequestsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-hospital-navy">Requests & Alerts</h1>
-        <p className="text-slate-600">Review and manage requests from doctors and nurses (ICU, General Medicine, Emergency)</p>
+        <p className="text-slate-600">Review and manage requests from doctors and nurses (ICU, Family Medicine, Emergency)</p>
       </div>
 
       {requests.length === 0 ? (

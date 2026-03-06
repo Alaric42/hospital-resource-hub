@@ -21,6 +21,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(main)/layout.js"
     ],
+    "/(main)/upload/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(main)/upload/page.js"
+    ],
     "/(main)/inventory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -36,35 +41,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(main)/match/page.js"
     ],
+    "/(main)/settings/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(main)/settings/page.js"
+    ],
     "/(main)/vendors/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(main)/vendors/page.js"
-    ],
-    "/(main)/analytics/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/analytics/page.js"
-    ],
-    "/(main)/upload/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/upload/page.js"
-    ],
-    "/(main)/vendor/profile/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/vendor/profile/page.js"
-    ],
-    "/(main)/staff/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/staff/page.js"
-    ],
-    "/(main)/staff/requests/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/staff/requests/page.js"
     ]
   }
 }

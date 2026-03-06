@@ -86,7 +86,7 @@ export default function DashboardPage() {
           </div>
           <h2 className="mb-2 text-lg font-semibold text-slate-800">No hospital data uploaded yet</h2>
           <p className="mx-auto max-w-md text-slate-600">
-            Upload your Excel workbook to begin. Your ICU, General Medicine, and Emergency data will appear here after import.
+            Upload your Excel workbook to begin. Your ICU, Family Medicine, and Emergency data will appear here after import.
           </p>
           <Link
             href="/upload"

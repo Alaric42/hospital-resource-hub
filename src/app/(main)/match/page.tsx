@@ -34,7 +34,7 @@ export default function MatchPage() {
       {assets.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
           <p className="font-medium text-slate-700">No hospital data uploaded yet</p>
-          <p className="mt-1 text-sm text-slate-500">Upload your Excel workbook with ICU, General Medicine, and Emergency tabs. Shortages will appear here once data is imported.</p>
+          <p className="mt-1 text-sm text-slate-500">Upload your Excel workbook with ICU, Family Medicine, and Emergency tabs. Shortages will appear here once data is imported.</p>
           <Link href="/upload" className="mt-4 inline-block text-sm font-medium text-hospital-teal hover:underline">Upload Excel workbook</Link>
         </div>
       ) : shortages.length === 0 ? (

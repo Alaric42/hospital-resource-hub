@@ -91,14 +91,14 @@ export default function UploadPage() {
         </p>
         <ol className="mb-4 list-inside list-decimal space-y-2 rounded-lg bg-slate-50 p-4 text-slate-800">
           <li><strong>ICU</strong></li>
-          <li><strong>General Medicine</strong></li>
+          <li><strong>Family Medicine</strong></li>
           <li><strong>Emergency</strong></li>
         </ol>
         <p className="mb-2 text-slate-700">
-          <strong>Each tab is treated as its own department.</strong> All rows in the ICU tab will be labeled as <em>ICU</em> in the app; all rows in the General Medicine tab will be labeled as <em>General Medicine</em>; and all rows in the Emergency tab will be labeled as <em>Emergency</em>. You do not need to enter the department in each row — the tab name is used automatically.
+          <strong>Each tab is treated as its own department.</strong> All rows in the ICU tab will be labeled as <em>ICU</em> in the app; all rows in the Family Medicine tab will be labeled as <em>Family Medicine</em>; and all rows in the Emergency tab will be labeled as <em>Emergency</em>. You do not need to enter the department in each row — the tab name is used automatically.
         </p>
         <p className="text-sm text-slate-600">
-          If a sheet has a &quot;Department&quot; column, it is ignored. The tab name is always the source of truth.
+          If a sheet has a &quot;Department&quot; column, it is ignored. The tab name is always the source of truth. A tab named <strong>Emergency Medicine</strong> is accepted as the Emergency department.
         </p>
       </div>
 
@@ -115,7 +115,7 @@ export default function UploadPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 font-semibold text-slate-800">1. Download template</h2>
           <p className="mb-4 text-sm text-slate-600">
-            The template has three sheets: ICU, General Medicine, and Emergency. Each sheet has the required columns: Asset ID, Asset Name, Category, Quantity Available, Minimum Threshold, Unit Cost, Current Condition, Funding Source, Last Updated, Notes.
+            The template has three sheets: ICU, Family Medicine, and Emergency. Each sheet has the required columns: Asset ID, Asset Name, Category, Quantity Available, Minimum Threshold, Unit Cost, Current Condition, Funding Source, Last Updated, Notes.
           </p>
           <button
             onClick={downloadTemplate}
@@ -129,7 +129,7 @@ export default function UploadPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-2 font-semibold text-slate-800">2. Upload your workbook</h2>
           <p className="mb-4 text-sm text-slate-600">
-            Your file must contain the three tabs: <strong>ICU</strong>, <strong>General Medicine</strong>, and <strong>Emergency</strong>. Each tab will be treated as that department.
+            Your file must contain the three tabs: <strong>ICU</strong>, <strong>Family Medicine</strong>, and <strong>Emergency</strong>. Each tab will be treated as that department.
           </p>
           <input
             ref={inputRef}
@@ -146,17 +146,28 @@ export default function UploadPage() {
               <p className="text-slate-500">Reading workbook...</p>
             ) : file ? (
               <>
-                <FileSpreadsheet className="mb-2 h-10 w-10 text-hospital-teal" />
+                {parseResult ? (
+                  <CheckCircle className="mb-2 h-10 w-10 text-emerald-500" />
+                ) : (
+                  <FileSpreadsheet className="mb-2 h-10 w-10 text-hospital-teal" />
+                )}
                 <p className="font-medium text-slate-700">{file.name}</p>
                 <p className="text-sm text-slate-500">
-                  {preview ? `${preview.length} records from ${parseResult?.detectedDepartments?.length ?? 0} departments` : "Processing..."}
+                  {parseResult
+                    ? "Finished processing"
+                    : "Processing..."}
                 </p>
+                {parseResult && (preview?.length ?? 0) > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    {preview?.length} records from {parseResult.detectedDepartments?.length ?? 0} departments
+                  </p>
+                )}
               </>
             ) : (
               <>
                 <Upload className="mb-2 h-10 w-10 text-slate-400" />
                 <p className="font-medium text-slate-700">Click to select .xlsx workbook</p>
-                <p className="text-sm text-slate-500">Tabs required: ICU, General Medicine, Emergency</p>
+                <p className="text-sm text-slate-500">Tabs required: ICU, Family Medicine, Emergency</p>
               </>
             )}
           </div>

@@ -1,11 +1,10 @@
 {
   "/page": "app/page.js",
-  "/(main)/match/page": "app/(main)/match/page.js",
-  "/(main)/vendors/page": "app/(main)/vendors/page.js",
-  "/(main)/upload/page": "app/(main)/upload/page.js",
-  "/(main)/analytics/page": "app/(main)/analytics/page.js",
-  "/(main)/vendor/profile/page": "app/(main)/vendor/profile/page.js",
-  "/(main)/staff/requests/page": "app/(main)/staff/requests/page.js",
   "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
-  "/(main)/staff/page": "app/(main)/staff/page.js"
+  "/(main)/upload/page": "app/(main)/upload/page.js",
+  "/(main)/requests/page": "app/(main)/requests/page.js",
+  "/(main)/vendors/page": "app/(main)/vendors/page.js",
+  "/(main)/match/page": "app/(main)/match/page.js",
+  "/(main)/inventory/page": "app/(main)/inventory/page.js",
+  "/(main)/settings/page": "app/(main)/settings/page.js"
 }

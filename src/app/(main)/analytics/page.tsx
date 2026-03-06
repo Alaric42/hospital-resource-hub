@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
           </div>
           <h2 className="mb-2 text-lg font-semibold text-slate-800">No analytics data yet</h2>
           <p className="mx-auto max-w-md text-slate-600">
-            Analytics are generated from your imported Excel data. Upload your workbook with ICU, General Medicine, and Emergency tabs to see charts and department breakdowns here.
+            Analytics are generated from your imported Excel data. Upload your workbook with ICU, Family Medicine, and Emergency tabs to see charts and department breakdowns here.
           </p>
           <Link
             href="/upload"
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-hospital-navy">Analytics</h1>
-        <p className="text-slate-600">Insights from your imported data (ICU, General Medicine, Emergency)</p>
+        <p className="text-slate-600">Insights from your imported data (ICU, Family Medicine, Emergency)</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
