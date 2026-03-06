@@ -2,9 +2,8 @@
   "/page": "app/page.js",
   "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
   "/(main)/upload/page": "app/(main)/upload/page.js",
-  "/(main)/requests/page": "app/(main)/requests/page.js",
-  "/(main)/vendors/page": "app/(main)/vendors/page.js",
   "/(main)/match/page": "app/(main)/match/page.js",
+  "/(main)/vendors/page": "app/(main)/vendors/page.js",
   "/(main)/inventory/page": "app/(main)/inventory/page.js",
-  "/(main)/settings/page": "app/(main)/settings/page.js"
+  "/(main)/vendor/profile/page": "app/(main)/vendor/profile/page.js"
 }
